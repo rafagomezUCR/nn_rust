@@ -1,8 +1,9 @@
 use std::fmt;
+use std::error::Error;
 
 pub struct Matrix {
-    rows: usize,
-    cols: usize,
+    pub rows: usize,
+    pub cols: usize,
     pub data: Vec<f64>,
 }
 
@@ -14,6 +15,19 @@ impl Matrix {
             cols,
             data,
         }
+    }
+
+    pub fn add(&self, right_matrix: &Matrix) -> Result<Matrix, Box<dyn Error>> {
+        // check for different sizes
+        let rows = self.rows;
+        let cols = self.cols;
+        let mut data = vec![0.0; self.data.len()];
+        for row in 0..rows {
+            for col in 0..cols {
+                data[row * cols + col] = self.data[row * cols + col] + right_matrix.data[row * cols + col];
+            }
+        }
+        Ok(Matrix{ rows, cols, data })
     }
 }
 
