@@ -1,5 +1,5 @@
 use std::fmt;
-use std::ops::Add;
+use std::ops::{Add, Sub, Mul};
 
 pub struct Matrix {
     rows: usize,
@@ -10,19 +10,23 @@ pub struct Matrix {
 impl Matrix {
 
     pub fn new(rows: usize, cols: usize, data: Vec<f64>) -> Self {
-        // should add some safety by either panicing or returning result
-        // or by creating a try_new func that returns a result and new returns the unwrap
-        Matrix{rows, cols, data}
+        if rows * cols != data.len() {
+            panic!("Matrix::new received mismatched dimensions and data length!");
+        }
+        Matrix{ rows, cols, data}
     }
 
+    #[inline]
     pub fn rows(&self) -> usize {
         self.rows
     }
 
+    #[inline]
     pub fn data(&self) -> &[f64] {
         &self.data
     }
 
+    #[inline]
     pub fn cols(&self) -> usize {
         self.cols
     }
@@ -41,40 +45,37 @@ impl Matrix {
         self
     }
 
-    pub fn add(&self, rhs: &Matrix) -> Result<Matrix, &'static str> {
+    pub fn add(&self, rhs: &Matrix) -> Matrix {
         if self.rows() != rhs.rows() || self.cols() != rhs.cols() {
-            return Err("Trying to Add Matrices of Different Dimensions!");
+            panic!("Trying to Add Matrices of Different Dimensions!");
         }
         let data: Vec<f64> = self.data().iter().zip(rhs.data()).map(|(x, y)| x + y).collect();
-        Ok(Matrix{ rows: self.rows(), cols: self.cols(), data})
+        Matrix{ rows: self.rows(), cols: self.cols(), data}
     }
 
-    pub fn subtract(&self, rhs: &Matrix) -> Result<Matrix, &'static str> {
+    pub fn subtract(&self, rhs: &Matrix) -> Matrix {
         if self.rows() != rhs.rows() || self.cols() != rhs.cols() {
-            return Err("Trying to subtract Matrices of Different Dimensions!");
+            panic!("Trying to subtract Matrices of Different Dimensions!");
         }
         let data: Vec<f64> = self.data().iter().zip(rhs.data()).map(|(x, y)| x - y).collect();
-        Ok(Matrix{rows: self.rows(), cols: self.cols(), data})
+        Matrix{rows: self.rows(), cols: self.cols(), data}
     }
 
-    pub fn elementwise_mult(&self, rhs: &Matrix) -> Result<Matrix, &'static str> {
+    pub fn elementwise_mult(&self, rhs: &Matrix) -> Matrix {
         if self.rows() != rhs.rows() || self.cols() != rhs.cols() {
-            return Err("Trying to do Elementwise Multiplication on Matrices of Different Dimensions!");
+            panic!("Trying to do Elementwise Multiplication on Matrices of Different Dimensions!");
         }
         let data: Vec<f64> = self.data().iter().zip(rhs.data()).map(|(x, y)| x * y).collect();
-        Ok(Matrix{rows: self.rows(), cols: self.cols(), data})
+        Matrix{rows: self.rows(), cols: self.cols(), data}
     }
 
-    pub fn mult(&self, rhs: &Matrix) -> Result<Matrix, &'static str> {
+    pub fn mult(&self, rhs: &Matrix) -> Matrix {
         if self.cols() != rhs.rows() {
-            return Err("Left Matrix columns don't match Right Matrix rows!");
+            panic!("Left Matrix columns don't match Right Matrix rows!");
         }
         let mut data = vec![0.0; self.rows() * rhs.cols()];
-        let self_data = self.data();
-        let self_rows = self.rows();
-        let self_cols = self.cols();
-        let rhs_data = rhs.data();
-        let rhs_cols = rhs.cols();
+        let (self_data, self_rows, self_cols) = (self.data(), self.rows(), self.cols());
+        let (rhs_data, rhs_cols) = (rhs.data(), rhs.cols());
         for i in 0..self_rows {
             for j in 0..rhs_cols {
                 let mut sum = 0.0;
@@ -84,17 +85,39 @@ impl Matrix {
                 data[i * rhs_cols + j] = sum;
             }
         }
-        Ok(Matrix{rows: self_rows, cols: rhs_cols, data})
+        Matrix{rows: self_rows, cols: rhs_cols, data}
     }
 }
 
-impl Add<&Matrix> for &Matrix {
+impl Add for &Matrix {
     type Output = Matrix;
     fn add(self, rhs: &Matrix) -> Matrix {
         if self.rows() != rhs.rows() || self.cols() != rhs.cols() {
             panic!("Trying to Add Matrices of Different Dimensions!");
         }
         let data: Vec<f64> = self.data().iter().zip(rhs.data()).map(|(x, y)| x + y).collect();
+        Matrix{ rows: self.rows(), cols: self.cols(), data}
+    }
+}
+
+impl Sub for &Matrix {
+    type Output = Matrix;
+    fn sub(self, rhs: &Matrix) -> Matrix {
+        if self.rows() != rhs.rows() || self.cols() != rhs.cols() {
+            panic!("Trying to Subtract Matrices of Different Dimensions");
+        }
+        let data: Vec<f64> = self.data().iter().zip(rhs.data()).map(|(x, y)| x - y).collect();
+        Matrix{ rows: self.rows(), cols: self.cols(), data}
+    }
+}
+
+impl Mul for &Matrix {
+    type Output = Matrix;
+    fn mul(self, rhs: &Matrix) -> Matrix {
+        if self.rows() != rhs.rows() || self.cols() != rhs.cols() {
+            panic!("Trying to do Elementwise Multiplication on Matrices of Different Dimensions!");
+        }
+        let data = self.data().iter().zip(rhs.data()).map(|(x, y)| x * y).collect();
         Matrix{ rows: self.rows(), cols: self.cols(), data}
     }
 }
