@@ -122,6 +122,16 @@ impl Mul for &Matrix {
     }
 }
 
+impl From<Vec<f64>> for Matrix {
+    fn from(data: Vec<f64>) -> Matrix {
+        Matrix {
+            rows: data.len(),
+            cols: 1,
+            data,
+        }
+    }
+}
+
 impl fmt::Display for Matrix {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         writeln!(f, "rows: {}", self.rows())?;

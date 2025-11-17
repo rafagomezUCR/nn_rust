@@ -1,6 +1,7 @@
 
 mod matrix;
 mod nn;
+mod activations;
 
 use crate::matrix::Matrix;
 use crate::nn::NeuralNetwork;
