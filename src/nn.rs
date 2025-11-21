@@ -16,6 +16,9 @@ impl NeuralNetwork {
     pub fn new(learning_rate: f32, input: Matrix, activations: Vec<Activations>, layers: Vec<usize>) -> NeuralNetwork {
         let weights = Self::create_weights(&layers);
         let bias = Self::create_bias(&layers);
+        if activations.len() != layers.len() {
+            panic!("Activations length is {} and the number of layers is {}", activations.len(), layers.len());
+        }
         NeuralNetwork {
             learning_rate, 
             input,
@@ -62,33 +65,43 @@ impl NeuralNetwork {
     }
 
     fn create_bias(layers: &[usize]) -> Vec<Matrix> {
-        layers.iter().map(|&x| {
+        layers.iter().skip(1).map(|&x| {
             let bias = vec![0.01; x];
             Matrix::new(x, 1, bias)
         }).collect()
+    }
+
+    pub fn feed_forward() -> Matrix {
+        Matrix::new(1, 1, vec![1.0])
     }
 }
 
 impl fmt::Display for NeuralNetwork {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "input: {}", self.input())?;
-        writeln!(f, "learning rate: {}", self.learning_rate())?;
+        writeln!(f, "input data")?;
+        writeln!(f, "----------")?;
+        writeln!(f, "{} x {} Matrix", self.input().rows(), self.input().cols())?;
+
+        writeln!(f, "\nlearning rate: {}", self.learning_rate())?;
         
-        writeln!(f, "activations:")?;
+        writeln!(f, "\nactivations")?;
+        writeln!(f, "-----------")?;
         for (i, a) in self.activations().iter().enumerate() {
-            writeln!(f, "   layer {}: {:?}", i, a)?;
+            writeln!(f, "layer {}: {:?}", i, a)?;
         }
         
-        writeln!(f, "layers: [{}]", self.layers().iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "))?;
-        
-        writeln!(f, "biases:")?;
+        writeln!(f, "\nlayers: [{}]", self.layers().iter().map(|x| x.to_string()).collect::<Vec<_>>().join(", "))?;
+
+        writeln!(f, "\nbias")?;
+        writeln!(f, "----")?;
         for (i, b) in self.bias().iter().enumerate() {
-            writeln!(f, "   layer {}: {}", i, b)?;
+            writeln!(f, "layer {}: {} x {}", i, b.rows(), b.cols())?;
         }
         
-        writeln!(f, "weights:")?;
+        writeln!(f, "\nweights:")?;
+        writeln!(f, "--------")?;
         for (i, w) in self.weights().iter().enumerate() {
-            writeln!(f, "   layer {}: {}", i, w)?;
+            writeln!(f, "layer {}: {} x {}", i, w.rows(), w.cols())?;
         }
         
         Ok(())

@@ -134,8 +134,7 @@ impl From<Vec<f64>> for Matrix {
 
 impl fmt::Display for Matrix {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "rows: {}", self.rows())?;
-        writeln!(f, "cols: {}", self.cols())?;
+        writeln!(f, "{} x {} Matrix", self.rows(), self.cols())?;
         for row in 0..self.rows() {
             for col in 0..self.cols() {
                 let val = self.data()[row * self.cols() + col];
