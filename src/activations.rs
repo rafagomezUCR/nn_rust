@@ -37,3 +37,18 @@ impl Activations {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::f64;
+
+    const THRESHOLD: f64 = 1e-9;
+
+    #[test]
+    fn sigmoid_f_test() {
+        let expected = 1.0 / (1.0 + (-1.0f64).exp());
+        assert!( (Activations::Sigmoid.f(0.0) - 0.5).abs() < THRESHOLD);
+        assert!( (Activations::Sigmoid.f(1.0) - expected).abs() < THRESHOLD)
+    }
+}

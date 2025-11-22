@@ -1,6 +1,7 @@
 use std::fmt;
 use std::ops::{Add, Sub, Mul};
 
+#[derive(Debug, PartialEq)]
 pub struct Matrix {
     rows: usize,
     cols: usize,
@@ -9,7 +10,7 @@ pub struct Matrix {
 
 impl Matrix {
 
-    pub fn new(rows: usize, cols: usize, data: Vec<f64>) -> Self {
+    pub fn new(rows: usize, cols: usize, data: Vec<f64>) -> Matrix {
         if rows * cols != data.len() {
             panic!("Matrix::new received mismatched dimensions and data length!");
         }
@@ -53,7 +54,7 @@ impl Matrix {
         Matrix{ rows: self.rows(), cols: self.cols(), data}
     }
 
-    pub fn subtract(&self, rhs: &Matrix) -> Matrix {
+    pub fn sub(&self, rhs: &Matrix) -> Matrix {
         if self.rows() != rhs.rows() || self.cols() != rhs.cols() {
             panic!("Trying to subtract Matrices of Different Dimensions!");
         }
@@ -143,5 +144,127 @@ impl fmt::Display for Matrix {
             writeln!(f)?;
         }
         Ok(())
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_matrix_test() {
+        let m = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(m, Matrix {rows: 2, cols: 2, data: vec![1.0, 2.0, 3.0, 4.0]});
+    }
+
+    #[test]
+    #[should_panic]
+    fn new_matrix_mismatch_test() {
+        Matrix::new(2, 2, vec![1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn transpose_test() {
+        let m = Matrix::new(3, 5, vec![
+            1.0, 2.0, 3.0, 4.0, 5.0,
+            6.0, 7.0, 8.0, 9.0, 10.0,
+            11.0, 12.0, 13.0, 14.0, 15.0
+        ]);
+        assert_eq!(m.transpose(), Matrix{
+            rows: 5, 
+            cols: 3, 
+            data: vec![
+                1.0, 6.0, 11.0,
+                2.0, 7.0, 12.0,
+                3.0, 8.0, 13.0,
+                4.0, 9.0, 14.0,
+                5.0, 10.0, 15.0
+            ]
+        })
+    }
+
+    #[test]
+    fn add_success_test() {
+        let a = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let b = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let c = Matrix::new(2, 2, vec![2.0, 4.0, 6.0, 8.0]);
+        assert_eq!(&a + &b, c);
+        assert_eq!(a.add(&b), c);
+    }
+
+    #[test]
+    #[should_panic]
+    fn add_mismatch_test() {
+        let a = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let b = Matrix::new(2, 3, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        &a + &b;
+    }
+
+    #[test]
+    fn subtract_success_test() {
+        let a = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let b = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let c = Matrix::new(2, 2, vec![0.0, 0.0, 0.0, 0.0]);
+        assert_eq!(&a - &b, c);
+        assert_eq!(a.sub(&b), c);
+    }
+
+    #[test]
+    #[should_panic]
+    fn subtract_mismatch_test() {
+        let a = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let b = Matrix::new(2, 3, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        &a - &b;
+    }
+
+    #[test]
+    fn elementwise_mult_success_test() {
+        let a = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let b = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let c = Matrix::new(2, 2, vec![1.0, 4.0, 9.0, 16.0]);
+        assert_eq!(&a * &b, c);
+        assert_eq!(a.elementwise_mult(&b), c);
+    }
+
+    #[test]
+    #[should_panic]
+    fn elementwise_mult_mismatch_test() {
+        let a = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let b = Matrix::new(2, 3, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        &a * &b;
+    }
+
+    #[test]
+    fn mult_success_test() {
+        let a = Matrix::new(2, 3, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = Matrix::new(3, 2, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let c = Matrix::new(2, 2, vec![22.0, 28.0, 49.0, 64.0]);
+        assert_eq!(a.mult(&b), c);
+    }
+
+    #[test]
+    #[should_panic]
+    fn mult_mismatch_test() {
+        let a = Matrix::new(2, 3, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        let b = Matrix::new(2, 3, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+        a.mult(&b);
+    }
+
+    #[test]
+    fn from_vec_test() {
+        let vec = vec![1.0, 2.0, 3.0, 4.0];
+        let vec_len = vec.len();
+        let m = Matrix::from(vec);
+        assert_eq!(m.rows(), vec_len);
+        assert_eq!(m.cols(), 1);
+    }
+
+    #[test]
+    fn matrix_display_test() {
+        let m = Matrix::new(2, 2, vec![1.0, 2.0, 3.0, 4.0]);
+        let my_string_string: String = format!("{}", &m);
+        let expected_string: String = String::from("2 x 2 Matrix\n1.000   2.000   \n3.000   4.000   \n");
+        assert_eq!(my_string_string, expected_string);
     }
 }
