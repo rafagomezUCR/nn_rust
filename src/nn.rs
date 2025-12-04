@@ -107,3 +107,55 @@ impl fmt::Display for NeuralNetwork {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_nn_and_getters_test() {
+        let learning_rate: f32 = 0.01;
+        let layers = vec![5, 3, 2, 1];
+        let input = Matrix::new(5, 1, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let activations = vec![
+            Activations::Relu, 
+            Activations::Tanh, 
+            Activations::Relu, 
+            Activations::Sigmoid
+        ];
+        let nn = NeuralNetwork::new(learning_rate, input.clone(), activations.clone(), layers.clone());
+        assert_eq!(nn.learning_rate(), learning_rate);
+        assert_eq!(nn.layers(), &layers);
+        assert_eq!(nn.activations(), &activations);
+        assert_eq!(nn.input(), &input);
+        for (i, w_layer) in nn.weights().iter().enumerate() {
+            assert_eq!(w_layer.rows(), layers[i + 1]);
+            assert_eq!(w_layer.cols(), layers[i]);
+            for w in w_layer.data() {
+                assert!(*w <= 1.0 && *w >= -1.0);
+            }
+        }
+        for (i, b_layer) in nn.bias().iter().enumerate() {
+            assert_eq!(b_layer.rows(), layers[i + 1]);
+            assert_eq!(b_layer.cols(), 1);
+            for b in b_layer.data(){
+                assert_eq!(*b, 0.01);
+            }
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn nn_layer_mismatch() {
+        let learning_rate: f32 = 0.01;
+        let layers = vec![5, 3, 2];
+        let input = Matrix::new(5, 1, vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let activations = vec![
+            Activations::Relu, 
+            Activations::Tanh, 
+            Activations::Relu, 
+            Activations::Sigmoid
+        ];
+        let nn = NeuralNetwork::new(learning_rate, input, activations, layers);
+    }
+}

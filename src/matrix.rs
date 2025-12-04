@@ -1,7 +1,7 @@
 use std::fmt;
 use std::ops::{Add, Sub, Mul};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Matrix {
     rows: usize,
     cols: usize,
