@@ -12,5 +12,6 @@ fn main() {
     let activations = vec![Activations::Sigmoid, Activations::Relu, Activations::Relu];
     let layers = vec![10, 1, 1];
     let n = NeuralNetwork::new(0.03, input, activations, layers);
+    n.feed_forward();
     println!("{}", n);
 }

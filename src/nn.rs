@@ -71,7 +71,12 @@ impl NeuralNetwork {
         }).collect()
     }
 
-    pub fn feed_forward() -> Matrix {
+    pub fn feed_forward(&self) -> Matrix {
+        let mut next_input: Matrix = self.input().clone();
+        for i in 0..self.layers().len() {
+            next_input = next_input.mult(&self.weights()[i]).clone();
+        }
+        println!("{}", next_input);
         Matrix::new(1, 1, vec![1.0])
     }
 }
