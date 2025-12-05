@@ -32,7 +32,15 @@ impl Matrix {
         self.cols
     }
 
-    pub fn transpose(mut self) -> Self {
+    pub fn apply<F>(&self, func: F) -> Matrix where F: Fn(f64) -> f64 {
+        Matrix {
+            rows: self.rows(),
+            cols: self.cols(),
+            data: self.data().iter().map(|&x| func(x)).collect(),
+        }
+    } 
+
+    pub fn transpose(&self) -> Matrix {
         let (rows, cols) = (self.rows(), self.cols());
         let mut new_data: Vec<f64> = vec![0.0; rows * cols];
         for row in 0..rows {
@@ -40,10 +48,11 @@ impl Matrix {
                 new_data[col * rows + row] = self.data()[row * cols + col];
             }
         }
-        self.rows = cols;
-        self.cols = rows;
-        self.data = new_data;
-        self
+        Matrix{
+            rows: self.cols,
+            cols: self.rows,
+            data: new_data,
+        }
     }
 
     pub fn add(&self, rhs: &Matrix) -> Matrix {
@@ -72,7 +81,7 @@ impl Matrix {
 
     pub fn mult(&self, rhs: &Matrix) -> Matrix {
         if self.cols() != rhs.rows() {
-            panic!("Left Matrix columns don't match Right Matrix rows!");
+            panic!("Left Matrix columns don't match Right Matrix rows!\n {}x{} {}x{}", self.rows(), self.cols(), rhs.rows(), rhs.cols());
         }
         let mut data = vec![0.0; self.rows() * rhs.cols()];
         let (self_data, self_rows, self_cols) = (self.data(), self.rows(), self.cols());

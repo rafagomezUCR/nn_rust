@@ -8,10 +8,12 @@ use crate::nn::NeuralNetwork;
 use crate::activations::Activations;
 
 fn main() {
-    let input = Matrix::new(10, 1, vec![0.0; 10]);
-    let activations = vec![Activations::Sigmoid, Activations::Relu, Activations::Relu];
-    let layers = vec![10, 1, 1];
-    let n = NeuralNetwork::new(0.03, input, activations, layers);
-    n.feed_forward();
-    println!("{}", n);
+    let input = Matrix::new(5, 1, vec![0.1; 5]);
+    let activations = vec![Activations::Relu, Activations::Sigmoid];
+    let layers = vec![5, 3, 1];
+    let mut n = NeuralNetwork::new(0.03, activations, layers);
+    let a = n.feed_forward(&input);
+    //println!("{}", n);
+    //n.print_z_matrix();
+    println!("{}", a);
 }
