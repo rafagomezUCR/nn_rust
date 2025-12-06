@@ -32,13 +32,17 @@ impl Matrix {
         self.cols
     }
 
+    pub fn dim_check(&self) {
+        println!("dim: {}x{}", self.rows(), self.cols());
+    }
+
     pub fn apply<F>(&self, func: F) -> Matrix where F: Fn(f64) -> f64 {
         Matrix {
             rows: self.rows(),
             cols: self.cols(),
             data: self.data().iter().map(|&x| func(x)).collect(),
         }
-    } 
+    }
 
     pub fn transpose(&self) -> Matrix {
         let (rows, cols) = (self.rows(), self.cols());

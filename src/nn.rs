@@ -55,10 +55,6 @@ impl NeuralNetwork {
         &self.weights
     }
 
-    pub fn z_matrix(&self) -> &[Matrix] {
-        &self.z_matrix
-    }
-
     fn create_weights(layers: &[usize]) -> Vec<Matrix> {
         let mut weights = Vec::new();
         for i in 0..(layers.len() - 1) {
@@ -93,15 +89,25 @@ impl NeuralNetwork {
         self.a_matrix.last().unwrap().clone()
     }
 
-    pub fn print_z_matrix(&self) {
-        for vec in self.z_matrix.iter() {
-            println!("{}", vec);
-        }
-    }
-
-    pub fn print_a_matrix(&self) {
-        for vec in self.a_matrix.iter() {
-            println!("{}", vec);
+    pub fn backpropagation(&self, y: &Matrix) {
+        // dz2 = a2 - y
+        // dw2 = dz2*a1T
+        // db2 = dz2
+        // dz1 = w2T*dz2 elem* g1`(z1)
+        // dw1 = dz1*xT
+        // db1 = dz1
+        // let mut dz_cache: Vec<Matrix> = vec![];
+        // dz_cache.push(self.a_matrix.last().unwrap().clone().sub(y));
+        let mut dw_cache: Vec<Matrix> = vec![];
+        let mut db_cache: Vec<Matrix> = vec![];
+        let dz = self.a_matrix.last().unwrap().clone().sub(y);
+        for i in (0..self.weights.len()).rev() {
+            let dw = dz.mult(&self.a_matrix[i - 1].transpose());
+            let db = dz.clone();
+            dw_cache.push(dw);
+            db_cache.push(db);
+            let activation_derivative = self.z_matrix[i - 1].apply(|x| self.activations[i].df(x));
+            let dz = self.weights[i].transpose().mult(&dz).elementwise_mult(&activation_derivative);
         }
     }
 }
