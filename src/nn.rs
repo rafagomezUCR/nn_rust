@@ -3,8 +3,6 @@ use crate::activations::Activations;
 use rand;
 use std::fmt;
 
-// need to make z_matrix and a_Matrix private cuz right now the public
-
 pub struct NeuralNetwork {
     learning_rate: f32,
     weights: Vec<Matrix>,
@@ -101,7 +99,8 @@ impl NeuralNetwork {
         let mut dw_cache: Vec<Matrix> = vec![];
         let mut db_cache: Vec<Matrix> = vec![];
         let dz = self.a_matrix.last().unwrap().clone().sub(y);
-        for i in (0..self.weights.len()).rev() {
+        for i in (1..self.weights.len()).rev() {
+            println!("{}", i);
             let dw = dz.mult(&self.a_matrix[i - 1].transpose());
             let db = dz.clone();
             dw_cache.push(dw);

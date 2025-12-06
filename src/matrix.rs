@@ -85,7 +85,7 @@ impl Matrix {
 
     pub fn mult(&self, rhs: &Matrix) -> Matrix {
         if self.cols() != rhs.rows() {
-            panic!("Left Matrix columns don't match Right Matrix rows!\n {}x{} {}x{}", self.rows(), self.cols(), rhs.rows(), rhs.cols());
+            panic!("Left Matrix columns don't match Right Matrix rows!\n {}x{} {}x{} when multiplying", self.rows(), self.cols(), rhs.rows(), rhs.cols());
         }
         let mut data = vec![0.0; self.rows() * rhs.cols()];
         let (self_data, self_rows, self_cols) = (self.data(), self.rows(), self.cols());
