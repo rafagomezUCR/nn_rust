@@ -1,10 +1,10 @@
 use crate::Matrix;
 use crate::activations::Activations;
 use rand;
-use std::fmt;
+use std::{fmt, collections::VecDeque};
 
 pub struct NeuralNetwork {
-    learning_rate: f32,
+    learning_rate: f64,
     weights: Vec<Matrix>,
     bias: Vec<Matrix>,
     activations: Vec<Activations>,
@@ -14,7 +14,7 @@ pub struct NeuralNetwork {
 }
 
 impl NeuralNetwork {
-    pub fn new(learning_rate: f32, activations: Vec<Activations>, layers: Vec<usize>) -> NeuralNetwork {
+    pub fn new(learning_rate: f64, activations: Vec<Activations>, layers: Vec<usize>) -> NeuralNetwork {
         let weights = Self::create_weights(&layers);
         let bias = Self::create_bias(&layers);
         if activations.len() != layers.len() - 1 {
@@ -33,7 +33,7 @@ impl NeuralNetwork {
         }
     }
 
-    pub fn learning_rate(&self) -> f32 {
+    pub fn learning_rate(&self) -> f64 {
         self.learning_rate
     }
 
@@ -81,32 +81,59 @@ impl NeuralNetwork {
         for i in 0..self.weights.len() {
             let z = self.weights[i].mult(&self.a_matrix[i]).add(&self.bias[i]);
             self.z_matrix.push(z.clone());
-            let a = z.apply(|x| self.activations[i].f(x));
+            let a = z.func_apply(|x| self.activations[i].f(x));
             self.a_matrix.push(a);
         }
         self.a_matrix.last().unwrap().clone()
     }
 
-    pub fn backpropagation(&self, y: &Matrix) {
-        // dz2 = a2 - y
-        // dw2 = dz2*a1T
-        // db2 = dz2
-        // dz1 = w2T*dz2 elem* g1`(z1)
-        // dw1 = dz1*xT
-        // db1 = dz1
-        // let mut dz_cache: Vec<Matrix> = vec![];
-        // dz_cache.push(self.a_matrix.last().unwrap().clone().sub(y));
-        let mut dw_cache: Vec<Matrix> = vec![];
-        let mut db_cache: Vec<Matrix> = vec![];
-        let dz = self.a_matrix.last().unwrap().clone().sub(y);
-        for i in (1..self.weights.len()).rev() {
-            println!("{}", i);
-            let dw = dz.mult(&self.a_matrix[i - 1].transpose());
+    // dz2 = a2 - y
+    // dw2 = dz2*a1T
+    // db2 = dz2
+    // dz1 = w2T*dz2 elem* g1`(z1)
+    // dw1 = dz1*xT
+    // db1 = dz1
+    // let mut dz_cache: Vec<Matrix> = vec![];
+    // dz_cache.push(self.a_matrix.last().unwrap().clone().sub(y));
+    pub fn backpropagation(&mut self, y: &Matrix) {
+        let mut dw_cache: VecDeque<Matrix> = VecDeque::with_capacity(self.weights.len());
+        let mut db_cache: VecDeque<Matrix> = VecDeque::with_capacity(self.bias.len());
+        let mut dz = self.a_matrix.last().unwrap().clone().sub(y);
+        for i in (0..self.weights.len()).rev() {
+            let dw = dz.mult(&self.a_matrix[i].transpose());
             let db = dz.clone();
-            dw_cache.push(dw);
-            db_cache.push(db);
-            let activation_derivative = self.z_matrix[i - 1].apply(|x| self.activations[i].df(x));
-            let dz = self.weights[i].transpose().mult(&dz).elementwise_mult(&activation_derivative);
+            dw_cache.push_front(dw);
+            db_cache.push_front(db);
+            if i != 0 {
+                let activation_derivative = self.z_matrix[i - 1].func_apply(|x| self.activations[i].df(x));
+                dz = self.weights[i].transpose().mult(&dz).elementwise_mult(&activation_derivative);
+            }
+        }
+        self.update_weights(dw_cache);
+        self.update_bias(db_cache);
+    }
+
+    pub fn update_weights(&mut self, new_weights: VecDeque<Matrix>) {
+        for (w, new_w) in self.weights.iter_mut().zip(new_weights.iter()) {
+            w.sub_inplace(&new_w.scalar_mult(self.learning_rate));
+        }
+    }
+
+    pub fn update_bias(&mut self, new_bias: VecDeque<Matrix>) {
+        for (b, new_b) in self.bias.iter_mut().zip(new_bias.iter()) {
+            b.sub_inplace(&new_b.scalar_mult(self.learning_rate));
+        }
+    }
+
+    pub fn print_z(&self) {
+        for m in self.z_matrix.iter() {
+            println!("{}", m);
+        }
+    }
+
+    pub fn print_a(&self) {
+        for m in self.a_matrix.iter() {
+            println!("{}", m);
         }
     }
 }
@@ -146,7 +173,7 @@ mod tests {
 
     #[test]
     fn new_nn_and_getters_test() {
-        let learning_rate: f32 = 0.01;
+        let learning_rate: f64 = 0.01;
         let layers = vec![5, 3, 2, 1];
         let activations = vec![
             Activations::Tanh, 
@@ -176,7 +203,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn nn_layer_mismatch() {
-        let learning_rate: f32 = 0.01;
+        let learning_rate: f64 = 0.01;
         let layers = vec![5, 3, 2];
         let activations = vec![
             Activations::Relu, 
@@ -190,7 +217,7 @@ mod tests {
     #[test]
     fn feed_forward_dimension_test() {
         let input = Matrix::new( 3, 1, vec![1.0, 2.0, 3.0]);
-        let learning_rate: f32 = 0.01;
+        let learning_rate: f64 = 0.01;
         let layers = vec![3, 1];
         let activations = vec![
             Activations::Sigmoid
@@ -205,7 +232,7 @@ mod tests {
     #[should_panic]
     fn feed_forward_input_mismatch() {
         let input = Matrix::new(4, 1, vec![1.0, 2.0, 3.0, 4.0]);
-        let learning_rate: f32 = 0.01;
+        let learning_rate: f64 = 0.01;
         let layers = vec![3, 1];
         let activations = vec![
             Activations::Sigmoid

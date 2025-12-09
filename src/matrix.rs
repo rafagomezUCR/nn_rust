@@ -32,15 +32,23 @@ impl Matrix {
         self.cols
     }
 
-    pub fn dim_check(&self) {
+    pub fn print_dim(&self) {
         println!("dim: {}x{}", self.rows(), self.cols());
     }
 
-    pub fn apply<F>(&self, func: F) -> Matrix where F: Fn(f64) -> f64 {
+    pub fn func_apply<F>(&self, func: F) -> Matrix where F: Fn(f64) -> f64 {
         Matrix {
             rows: self.rows(),
             cols: self.cols(),
             data: self.data().iter().map(|&x| func(x)).collect(),
+        }
+    }
+
+    pub fn scalar_mult(&self, scalar: f64) -> Matrix {
+        Matrix {
+            rows: self.rows(),
+            cols: self.cols(),
+            data: self.data().iter().map(|x| {scalar * x}).collect(),
         }
     }
 
@@ -73,6 +81,15 @@ impl Matrix {
         }
         let data: Vec<f64> = self.data().iter().zip(rhs.data()).map(|(x, y)| x - y).collect();
         Matrix{rows: self.rows(), cols: self.cols(), data}
+    }
+
+    pub fn sub_inplace(&mut self, rhs: &Matrix) {
+        if self.rows != rhs.rows || self.cols != rhs.cols {
+            panic!("Matrix dimension mismatch in sub_inplace");
+        }
+        for i in 0..self.data.len() {
+            self.data[i] -= rhs.data[i];
+        }
     }
 
     pub fn elementwise_mult(&self, rhs: &Matrix) -> Matrix {
